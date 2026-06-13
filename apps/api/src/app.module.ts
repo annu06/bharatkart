@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
+import { HealthController } from './health.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { StoresModule } from './modules/stores/stores.module';
@@ -22,28 +23,40 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
       envFilePath: ['.env.local', '.env'],
     }),
 
-    // Database
+    // Database - only connect if DATABASE_URL is provided
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        url: configService.get('DATABASE_URL'),
-        autoLoadEntities: true,
-        synchronize: configService.get('NODE_ENV') !== 'production',
-        ssl:
-          configService.get('NODE_ENV') === 'production'
-            ? { rejectUnauthorized: false }
-            : false,
-        logging: configService.get('NODE_ENV') === 'development',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+        if (!databaseUrl) {
+          // Return SQLite in-memory for development/demo without a real DB
+          return {
+            type: 'sqlite' as const,
+            database: ':memory:',
+            autoLoadEntities: true,
+            synchronize: true,
+          };
+        }
+        return {
+          type: 'postgres' as const,
+          url: databaseUrl,
+          autoLoadEntities: true,
+          synchronize: configService.get('NODE_ENV') !== 'production',
+          ssl:
+            configService.get('NODE_ENV') === 'production'
+              ? { rejectUnauthorized: false }
+              : false,
+          logging: configService.get('NODE_ENV') === 'development',
+        };
+      },
       inject: [ConfigService],
     }),
 
     // Rate Limiting
     ThrottlerModule.forRoot([
       {
-        ttl: 60000, // 1 minute
-        limit: 100, // 100 requests per minute
+        ttl: 60000,
+        limit: 100,
       },
     ]),
 
@@ -62,5 +75,6 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
     NotificationsModule,
     DeliveryModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

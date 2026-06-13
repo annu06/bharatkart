@@ -35,8 +35,10 @@ async function bootstrap() {
     }),
   );
 
-  // Global prefix
-  app.setGlobalPrefix('api/v1');
+  // Global prefix - exclude health check for Railway
+  app.setGlobalPrefix('api/v1', {
+    exclude: ['health'],
+  });
 
   const port = configService.get('PORT', 4000);
   await app.listen(port);
