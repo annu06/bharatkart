@@ -117,7 +117,7 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        secret: this.configService.get('JWT_REFRESH_SECRET') || 'default-dev-refresh-secret',
       });
 
       const user = await this.usersService.findById(payload.sub);
@@ -141,12 +141,12 @@ export class AuthService {
     const payload = { sub: userId, role };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET'),
+      secret: this.configService.get('JWT_SECRET') || 'default-dev-secret-change-in-production',
       expiresIn: '7d',
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
+      secret: this.configService.get('JWT_REFRESH_SECRET') || 'default-dev-refresh-secret',
       expiresIn: '30d',
     });
 
