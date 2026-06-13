@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_18"]
+
+[phases.install]
+cmds = ["cd apps/api && npm install --include=dev"]
+
+[phases.build]
+cmds = ["cd apps/api && npx nest build"]
+
+[start]
+cmd = "cd apps/api && node dist/main"
