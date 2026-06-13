@@ -15,6 +15,27 @@ import { TrackingModule } from './modules/tracking/tracking.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 
+// Conditionally include TypeORM only when DATABASE_URL is available
+const dbModule = process.env.DATABASE_URL
+  ? [
+      TypeOrmModule.forRootAsync({
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          type: 'postgres' as const,
+          url: configService.get('DATABASE_URL'),
+          autoLoadEntities: true,
+          synchronize: configService.get('NODE_ENV') !== 'production',
+          ssl:
+            configService.get('NODE_ENV') === 'production'
+              ? { rejectUnauthorized: false }
+              : false,
+          logging: configService.get('NODE_ENV') === 'development',
+        }),
+        inject: [ConfigService],
+      }),
+    ]
+  : [];
+
 @Module({
   imports: [
     // Configuration
@@ -23,34 +44,8 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
       envFilePath: ['.env.local', '.env'],
     }),
 
-    // Database - only connect if DATABASE_URL is provided
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        const databaseUrl = configService.get('DATABASE_URL');
-        if (!databaseUrl) {
-          // Return better-sqlite3 in-memory for demo without a real DB
-          return {
-            type: 'better-sqlite3' as const,
-            database: ':memory:',
-            autoLoadEntities: true,
-            synchronize: true,
-          };
-        }
-        return {
-          type: 'postgres' as const,
-          url: databaseUrl,
-          autoLoadEntities: true,
-          synchronize: configService.get('NODE_ENV') !== 'production',
-          ssl:
-            configService.get('NODE_ENV') === 'production'
-              ? { rejectUnauthorized: false }
-              : false,
-          logging: configService.get('NODE_ENV') === 'development',
-        };
-      },
-      inject: [ConfigService],
-    }),
+    // Database (only if DATABASE_URL is set)
+    ...dbModule,
 
     // Rate Limiting
     ThrottlerModule.forRoot([

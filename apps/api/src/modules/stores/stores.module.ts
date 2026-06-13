@@ -4,8 +4,12 @@ import { StoresService } from './stores.service';
 import { StoresController } from './stores.controller';
 import { Store } from './entities/store.entity';
 
+const imports = process.env.DATABASE_URL
+  ? [TypeOrmModule.forFeature([Store])]
+  : [];
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Store])],
+  imports,
   controllers: [StoresController],
   providers: [StoresService],
   exports: [StoresService],
