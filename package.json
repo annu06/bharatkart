@@ -1,0 +1,21 @@
+{
+  "name": "bharatkart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BharatKart - Hyperlocal Grocery Delivery Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run start:dev --workspace=apps/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:api": "npm run build --workspace=apps/api",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
