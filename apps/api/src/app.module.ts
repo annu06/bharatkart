@@ -29,9 +29,9 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.get('DATABASE_URL');
         if (!databaseUrl) {
-          // Return SQLite in-memory for development/demo without a real DB
+          // Return better-sqlite3 in-memory for demo without a real DB
           return {
-            type: 'sqlite' as const,
+            type: 'better-sqlite3' as const,
             database: ':memory:',
             autoLoadEntities: true,
             synchronize: true,
